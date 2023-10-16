@@ -1,25 +1,12 @@
 // POST api/new-meetup
 
-import { MongoClient } from "mongodb";
+import prisma from "../../lib/prisma";
 
 async function handler(req, res) {
   if (req.method === "POST") {
     const data = req.body;
-
-    const client = await MongoClient.connect(
-      "mongodb+srv://admin:vrXD0ubwvdrQ42MT@cluster0.b57yqdj.mongodb.net/?retryWrites=true&w=majority"
-    );
-
-    const db = client.db();
-
-    const meetupsCollection = db.collection("meetups");
-
-    const result = await meetupsCollection.insertOne(data);
-
-    console.log(result);
-
-    client.close();
-
+    console.log('data', data);
+    await prisma.meetup.create({ data });
     res.status(201).json({ message: "Meetup inserted!" });
   }
 }

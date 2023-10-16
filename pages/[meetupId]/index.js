@@ -1,9 +1,10 @@
 import MeetupDetail from "../../components/meetups/MeetupDetail";
-import { MongoClient, ObjectId } from "mongodb";
 import { Fragment } from "react";
 import Head from "next/head";
+import prisma from "../../lib/prisma";
 
 function MeetuDetialsPage(props) {
+  console.log("props", props);
   return (
     <Fragment>
       <Head>
@@ -21,52 +22,24 @@ function MeetuDetialsPage(props) {
 }
 
 export async function getStaticPaths() {
-  const client = await MongoClient.connect(
-    "mongodb+srv://admin:vrXD0ubwvdrQ42MT@cluster0.b57yqdj.mongodb.net/?retryWrites=true&w=majority"
-  );
-
-  const db = client.db();
-
-  const meetupsCollection = db.collection("meetups");
-
-  const meetups = await meetupsCollection.find({}, { _id: 1 }).toArray();
-
-  client.close();
-
+  const meetupData = await prisma.meetup.findMany();
   return {
-    fallback: 'blocking',
-    paths: meetups.map((meetup) => ({
-      params: { meetupId: meetup._id.toString() },
+    fallback: "blocking",
+    paths: meetupData.map((meetup) => ({
+      params: { meetupId: meetup.id.toString() },
     })),
   };
 }
 
 export async function getStaticProps(context) {
-  const meetupId = context.params.meetupId;
-
-  const client = await MongoClient.connect(
-    "mongodb+srv://admin:vrXD0ubwvdrQ42MT@cluster0.b57yqdj.mongodb.net/?retryWrites=true&w=majority"
-  );
-  const db = client.db();
-
-  const meetupsCollection = db.collection("meetups");
-
-  const selectedMeedtup = await meetupsCollection.findOne({
-    _id: new ObjectId(meetupId),
+  const meetupData = await prisma.meetup.findUnique({
+    where: {
+      id: Number(context.params.meetupId),
+    },
   });
-  console.log(selectedMeedtup);
-  client.close();
 
   return {
-    props: {
-      meetupData: {
-        id: selectedMeedtup._id.toString(),
-        title: selectedMeedtup.title,
-        address: selectedMeedtup.address,
-        image: selectedMeedtup.image,
-        description: selectedMeedtup.description,
-      },
-    },
+    props: { meetupData },
   };
 }
 
